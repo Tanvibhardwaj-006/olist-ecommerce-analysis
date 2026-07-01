@@ -1,0 +1,19 @@
+Project: Olist E-Commerce Analysis
+
+Dataset:
+Brazilian E-Commerce Public Dataset by Olist
+
+Objective:
+Analyze sales performance, customer behavior, logistics efficiency, and customer satisfaction.
+
+Tables:
+- customers
+- orders
+- order_items
+- order_payments
+- order_reviews
+- products
+- sellers
+- geolocation
+- product_category_name_translation
+
