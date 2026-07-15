@@ -36,7 +36,7 @@ SELECT
 or a market dynamic we need to understand better.
 */
 
----- AOV  avg revenue by each customer  by state
+---- AOV  avg revenue by each customer  by state :  average spending per order by state
 
 SELECT c.customer_state,
 count( DISTINCT o.order_id) AS total_orders,
@@ -50,5 +50,115 @@ on o.order_id=p.order_id
 group by c.customer_state
 order by Avg_order_value;
 
+---  Average item  price : which states are spending more on average per item purchased
+
+SELECT c.customer_state,round(avg(oi.price),2) as avg_item_price
+from orders as o  join customers as c 
+on o.customer_id = c.customer_id
+join order_items  as oi on
+o.order_id = oi.order_id
+group by c.customer_state 
+order by avg_item_price;
+
+---- Items per order by state : which states are buying more items per order on average
+SELECT c.customer_state ,
+round(count(oi.order_item_id)/count(distinct o.order_id)::numeric,2 )  as  item_per_order
+from customers as c 
+JOIN orders as o 
+on c.customer_id = o.customer_id 
+JOIN order_items as oi on
+o.order_id = oi.order_id
+group by c.customer_state
+order by item_per_order; 
+
+/*FINDINGS : rural states show higher AOV and higher average item price. 
+despite having far less orders the items per sorder is nearly the same across all states (1.08-1.21).
+this tells that rural people spend more likely due to the less seller/product competition in their area. 
+*/
+
+--- RMF : REDUENCY, FREQUENCY, MONETARY VALUE :  RFM analysis to identify the most valuable customers
+
+-- recency : the number of days since the last order was placed by each customer
+with recency as (
+	select  c.customer_unique_id , max(cast(o.order_purchase_timestamp as date)) as last_customer_order_date
+	from customers as c 
+	join orders as o 
+	on c.customer_id = o.customer_id
+	group by c.customer_unique_id),
+	
+reference_date as(
+	select 
+	max(cast(o.order_purchase_timestamp as date)) as last_order_date
+	from  orders as o ),
+	
+Final_recency as(
+	select customer_unique_id, (last_order_date - last_customer_order_date )
+ 	as recency_days from  reference_date  cross join recency ),
+ 
+--- frequency : total number of orders per customer
+frequency as (
+	SELECT c.customer_unique_id,COUNT(o.order_id) AS order_count
+	FROM orders  as o JOIN customers as c 
+	ON o.customer_id = c.customer_id
+	GROUP BY  c.customer_unique_id ),
+
+--- monetary value : total amount spent by each customer
+monetary_value as(
+	SELECT c.customer_unique_id,round(SUM(p.payment_value)::numeric,2) AS total_spent
+	FROM orders  as o JOIN customers as c
+	ON o.customer_id = c.customer_id
+	JOIN payments as p 
+	ON o.order_id = p.order_id
+	GROUP BY c.customer_unique_id),
+	
+
+rfm_value as(
+select r.customer_unique_id,
+	r.recency_days,
+	f.order_count,
+	m.total_spent,
+	coalesce(m.total_spent,0) as zero_payments 
+from Final_recency as r
+join frequency as f
+on r.customer_unique_id=f.customer_unique_id 
+left join monetary_value as m
+on r.customer_unique_id=m.customer_unique_id),
 
 
+rfm_grade as (
+select customer_unique_id,
+	recency_days,
+	order_count,
+	zero_payments,
+	NTILE(5) OVER (ORDER BY recency_days desc) as r_score,
+	case 
+	when order_count=1 then 1
+	when order_count=2 then 2
+	when order_count=3 then 3
+	when order_count=4 then 4
+	when order_count>=5 then  5
+	else 1
+	end as f_score ,
+	NTILE(5) OVER (ORDER BY zero_payments asc) as m_score
+	FROM rfm_value),
+
+--------  customer_scoring --------
+select customer_unique_id,
+	recency_days,
+	order_count,
+	zero_payments,
+	r_score,
+	m_score,
+CASE
+  WHEN r_score >= 4 AND m_score >= 4 THEN 'Gold'
+  WHEN r_score >= 4 AND m_score <= 2 THEN 'Potential'
+  WHEN r_score <= 2 AND m_score >= 4 THEN 'At Risk'
+  WHEN r_score <= 2 AND m_score <= 2 THEN 'lost'
+  ELSE 'mid'
+END AS customer_segment
+from rfm_grade
+
+
+;
+
+;
