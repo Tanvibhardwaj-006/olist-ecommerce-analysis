@@ -6,10 +6,10 @@ Analysis of Brazilian e-commerce data to understand sales performance, customer 
 **Dataset:** Brazilian E-Commerce Public Dataset by Olist (https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
 
 ## Data Structure
-- 99,441 orders** from Sept 2016 – Oct 2018
-- 96,096 unique customers**
-- 32,951 products** across 71 categories
-- 3,096 sellers**
+- 99,441 orders- from Sept 2016 – Oct 2018
+- 96,096 unique customers
+- 32,951 products -  across 71 categories
+- 3,096 sellers
 
 ## Analysis Completed
 
