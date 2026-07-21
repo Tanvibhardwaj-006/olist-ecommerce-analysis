@@ -116,8 +116,7 @@ rfm_value as(
 select r.customer_unique_id,
 	r.recency_days,
 	f.order_count,
-	m.total_spent,
-	coalesce(m.total_spent,0) as zero_payments 
+	coalesce(m.total_spent,0) as monetary_clean 
 from Final_recency as r
 join frequency as f
 on r.customer_unique_id=f.customer_unique_id 
@@ -129,7 +128,7 @@ rfm_grade as (
 select customer_unique_id,
 	recency_days,
 	order_count,
-	zero_payments,
+ 	monetary_clean,
 	NTILE(5) OVER (ORDER BY recency_days desc) as r_score,
 	case 
 	when order_count=1 then 1
@@ -139,14 +138,14 @@ select customer_unique_id,
 	when order_count>=5 then  5
 	else 1
 	end as f_score ,
-	NTILE(5) OVER (ORDER BY zero_payments asc) as m_score
+	NTILE(5) OVER (ORDER BY monetary_clean asc) as m_score
 	FROM rfm_value),
 
 --------  customer_scoring --------
 select customer_unique_id,
 	recency_days,
 	order_count,
-	zero_payments,
+ 	monetary_clean,
 	r_score,
 	m_score,
 CASE
@@ -154,11 +153,29 @@ CASE
   WHEN r_score >= 4 AND m_score <= 2 THEN 'Potential'
   WHEN r_score <= 2 AND m_score >= 4 THEN 'At Risk'
   WHEN r_score <= 2 AND m_score <= 2 THEN 'lost'
-  ELSE 'mid'
 END AS customer_segment
-from rfm_grade
+from rfm_grade;
+
+/* F score excluded from segmentation: 
+97% of customers have order_count=1, making frequency non-discriminating.*/
+
+ -- new vs returning customers--
+ with monthly_trend as(
+select o.order_purchase_timestamp, 
+min(o.order_purchase_timestamp) over ( partition by c.customer_unique_id) as first_order_date ,
+case 
+	when o.order_purchase_timestamp = min(o.order_purchase_timestamp) over ( partition by customer_unique_id)
+	then 'New Customers'
+	else 'Returning Customers'
+end as customer_status,
+DATE_TRUNC('month',o.order_purchase_timestamp) as order_month
+from orders as o join 
+customers as c 
+on o.customer_id = c.customer_id)
+select order_month,customer_status,count(*) from monthly_trend 
+GROUP BY order_month, customer_status;
 
 
-;
-
-;
+-- FINDING: Returning customer volume grows steadily 2017→2018 but stays small overall,
+-- consistent with the 3.12% repeat purchase rate found earlier.
+-- Sept/Oct 2018 dip is a dataset artifact (data ends mid-Oct 2018), not a data quality issue.
