@@ -7,7 +7,7 @@ Analysis of Brazilian e-commerce data to understand sales performance, customer 
 
 ## Data Structure
 - 99,441 orders- from Sept 2016 – Oct 2018
-- 96,096 unique customers
+- 96,095 unique customers
 - 32,951 products -  across 71 categories
 - 3,096 sellers
 
@@ -23,6 +23,7 @@ Analysis of Brazilian e-commerce data to understand sales performance, customer 
 - Total orders per customer
 - Repeat purchase rate: **3.12%** (2,997 of 96,096 customers)
 - Geographic value by state
+- ** status: ✅completed**
 
 ### 3. Sales Performance (In Progress)
 - Top product categories by revenue
