@@ -186,7 +186,7 @@ SELECT
 FROM delivery_status as ds
 JOIN order_sellers as os on ds.order_id = os.order_id
 group by  os.seller_id
-having count(*) >= 100
+having count(*) >= 50
 order by  pct_late DESC
 ;
 

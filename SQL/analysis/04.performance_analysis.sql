@@ -20,13 +20,13 @@ ORDER BY order_month
 
 --- REVENUE PER CATEGORY ----
 ----PARETO ANALYSIS----
-
+with category_revenue as (
 SELECT c.product_category_name_english, round(sum(oi.price):: numeric,2) as category_revenue
 FROM category as c JOIN  products as p on 
 c.product_category_name = p.product_category_name 
 JOIN  order_items as oi  on
 oi.product_id = p.product_id
-group by c.product_category_name_english
+group by c.product_category_name_english)
 
 
 -- Running revenue per category--

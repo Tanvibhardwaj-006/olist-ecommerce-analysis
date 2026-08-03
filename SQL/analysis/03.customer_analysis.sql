@@ -43,7 +43,7 @@ count( DISTINCT o.order_id) AS total_orders,
 ROUND(SUM(p.payment_value) )as Total_revenue,
 ROUND(avg(p.payment_value)) as Avg_order_value
 FROM orders AS O
-JOIN customers AS c s
+JOIN customers AS c 
 on c.customer_id=o.customer_id
 JOIN payments as p 
 on o.order_id=p.order_id
