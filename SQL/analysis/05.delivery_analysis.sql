@@ -157,6 +157,7 @@ note: ~3.25% of orders have items across multiple categories,
 -- >=50 threshold instead of 100 - sellers are a much smaller/spread out group than categories, 
 --100 wouldve wiped out too many real sellers
 
+
 WITH delivery_status AS (
     SELECT order_id,
         CASE 
@@ -179,10 +180,10 @@ SELECT
     SUM(case
 	when ds.delivery_status = 'Delivery Late' then 1 
 	else 0 END) AS late_orders,
-    ROUND((SUM(CASE 
+    ROUND(100.0*SUM(CASE 
     when ds.delivery_status = 'Delivery Late' 
     then  1 
-    ELSE 0 END) / COUNT(*))*100, 2) AS pct_late
+    ELSE 0 END) / COUNT(*), 2) AS pct_late
 FROM delivery_status as ds
 JOIN order_sellers as os on ds.order_id = os.order_id
 group by  os.seller_id
@@ -192,4 +193,4 @@ order by  pct_late DESC
 
 /* output: two sellers clearly stand out - 30.14% late (73 orders) and 26.04% late (96 orders)
 rest of the list tapers off normally, some sellers even at 0% late on 50-90 orders
-unlike categories, this one actually points to specific bad actors - w
+unlike categories, this one actually points to specific bad actors - worth flagging these sellers
