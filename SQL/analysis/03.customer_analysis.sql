@@ -139,7 +139,7 @@ select customer_unique_id,
 	else 1
 	end as f_score ,
 	NTILE(5) OVER (ORDER BY monetary_clean asc) as m_score
-	FROM rfm_value),
+	FROM rfm_value)
 
 --------  customer_scoring --------
 select customer_unique_id,
@@ -153,6 +153,7 @@ CASE
   WHEN r_score >= 4 AND m_score <= 2 THEN 'Potential'
   WHEN r_score <= 2 AND m_score >= 4 THEN 'At Risk'
   WHEN r_score <= 2 AND m_score <= 2 THEN 'lost'
+  else 'mid-tier'
 END AS customer_segment
 from rfm_grade;
 
