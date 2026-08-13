@@ -89,3 +89,120 @@ order by  cs.avg_review_score;
  
 --finding: 5 categoies falls under the worst performing categories despite high volume out of which the  OFFICE_FURNITURE
 --category stand out the most with avg review score 3.49 below than the other 4 . this category has a real problem in the dataset.
+
+--------------------------------------------------------------------------------------
+
+--Cross-analysis of delivery lateness vs. RFM/recency segments
+
+
+-- recency : the number of days since the last order was placed by each customer
+with recency as (
+	select  c.customer_unique_id , max(cast(o.order_purchase_timestamp as date)) as last_customer_order_date
+	from customers as c 
+	join orders as o 
+	on c.customer_id = o.customer_id
+	group by c.customer_unique_id),
+	
+reference_date as(
+	select 
+	max(cast(o.order_purchase_timestamp as date)) as last_order_date
+	from  orders as o ),
+	
+Final_recency as(
+	select customer_unique_id, (last_order_date - last_customer_order_date )
+ 	as recency_days from  reference_date  cross join recency ),
+ 
+--- frequency : total number of orders per customer
+frequency as (
+	SELECT c.customer_unique_id,COUNT(o.order_id) AS order_count
+	FROM orders  as o JOIN customers as c 
+	ON o.customer_id = c.customer_id
+	GROUP BY  c.customer_unique_id ),
+
+--- monetary value : total amount spent by each customer
+monetary_value as(
+	SELECT c.customer_unique_id,round(SUM(p.payment_value)::numeric,2) AS total_spent
+	FROM orders  as o JOIN customers as c
+	ON o.customer_id = c.customer_id
+	JOIN payments as p 
+	ON o.order_id = p.order_id
+	GROUP BY c.customer_unique_id),
+	
+
+rfm_value as(
+select r.customer_unique_id,
+	r.recency_days,
+	f.order_count,
+	coalesce(m.total_spent,0) as monetary_clean 
+from Final_recency as r
+join frequency as f
+on r.customer_unique_id=f.customer_unique_id 
+left join monetary_value as m
+on r.customer_unique_id=m.customer_unique_id),
+
+
+rfm_grade as (
+select customer_unique_id,
+	recency_days,
+	order_count,
+ 	monetary_clean,
+	NTILE(5) OVER (ORDER BY recency_days desc) as r_score,
+	case 
+	when order_count=1 then 1
+	when order_count=2 then 2
+	when order_count=3 then 3
+	when order_count=4 then 4
+	when order_count>=5 then  5
+	else 1
+	end as f_score ,
+	NTILE(5) OVER (ORDER BY monetary_clean asc) as m_score
+	FROM rfm_value),
+	
+--------  customer_scoring --------
+rfm_segment  as (
+	select customer_unique_id,
+	recency_days,
+	order_count,
+ 	monetary_clean,
+	r_score,
+	m_score,
+CASE
+  WHEN r_score >= 4 AND m_score >= 4 THEN 'Gold'
+  WHEN r_score >= 4 AND m_score <= 2 THEN 'Potential'
+  WHEN r_score <= 2 AND m_score >= 4 THEN 'At Risk'
+  WHEN r_score <= 2 AND m_score <= 2 THEN 'lost'
+  else 'mid-tier'
+END AS customer_segment
+from rfm_grade),
+
+deliveries as(
+select 
+	o.order_id,
+	o.order_delivered_customer_date,
+	o.order_estimated_delivery_date,
+	(o.order_delivered_customer_date:: date - o.order_estimated_delivery_date::date ) as late_days
+	from orders as o 
+	where o.order_status= 'delivered'
+	
+),
+late_delivery_flag  as (
+select dd.order_id,
+	case
+	when dd.late_days>0 then 'late'
+	else 'on time'	end as  late_label
+	FROM deliveries as dd)
+
+
+
+select customer_segment,
+		COUNT(*) FILTER (WHERE late_label = 'late') as late_order,
+		count(*) as total_order_count,
+		round(100.0*COUNT(*) FILTER (WHERE late_label = 'late')/count(*),2) as '% late'
+from rfm_segment  as rfm join 
+customers as c on 
+rfm.customer_unique_id = c.customer_unique_id
+join orders  as o on
+o.customer_id=c.customer_id
+join late_delivery_flag as ldf on
+o.order_id = ldf.order_id
+group by customer_segment;
