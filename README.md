@@ -24,7 +24,7 @@ tutorial-style walkthrough.
 - Delivery lateness is roughly uniform across customer value segments — the data
   does **not** support a simple "late delivery causes churn" story.
 - Platform growth is driven almost entirely by new-customer acquisition — even at
-  peak monthly volume, returning customers stay a small fraction of that month's
+  peak monthly volume, returning customers stay a small fraction of that month's 
   activity.
 
 Full findings with methodology, thresholds, and reasoning: see [`findings/`](./findings).
@@ -35,7 +35,7 @@ Full findings with methodology, thresholds, and reasoning: see [`findings/`](./f
 | Data Validation | ✅ Complete — see [VALIDATION_FINDINGS.md](./VALIDATION_FINDINGS.md) |
 | Customer Analysis | ✅ Complete — repeat purchase rate, geographic AOV, RFM segmentation, and new-vs-returning monthly trend |
 | Sales Performance | ✅ Complete |
-| Logistics & Delivery | ✅ Complete |
+| Logistics & Delivery | ✅ Complete |  
 | Customer Satisfaction | ✅ Complete — review distribution, worst categories, RFM × delivery-lateness cross-analysis |
 
 ## Not Started Yet
