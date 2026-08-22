@@ -11,7 +11,7 @@ We ran a comprehensive validation on the Olist E-Commerce dataset to ensure data
 
 ### 2. **Uniqueness** (Are primary/composite keys actually unique?)
 - Checked for duplicate values in primary keys: `customer_id`, `order_id`, `product_id`, `seller_id`
-- Checked for duplicates in composite keys: 
+- Checked for duplicates in composite keys:
   - `order_items` (order_id + order_item_id)
   - `payments` (order_id + payment_sequential)
   - `order_reviews` (review_id + order_id)
@@ -29,8 +29,9 @@ Checked for impossible or unrealistic values:
 | Payment installments = 0 | **2 rows ❌** | Bug in source data (invalid installments) |
 | Products with weight = 0 | **4 rows ⚠️** | Likely digital products or unmeasured items |
 | Products with negative dimensions | 0 rows ✅ | All physical dimensions valid |
+| `shipping_limit_date` far outside dataset range | **4 rows ⚠️** | Seller-specific data entry error (see below) |
 
-**What this means:** 2 payment records are corrupted (impossible to pay in 0 installments). 4 products have missing weight data. These represent <0.01% of the dataset and were kept as-is to preserve data lineage.
+**What this means:** 2 payment records are corrupted (impossible to pay in 0 installments). 4 products have missing weight data. 4 order_items rows have an implausible shipping_limit_date. These represent <0.01% of the dataset and were kept as-is to preserve data lineage.
 
 ### 4. **Consistency** (Do related fields logically match?)
 
@@ -53,7 +54,7 @@ Checked for date/status inconsistencies:
 | **Data Completeness** | 100% (all data imported) |
 | **Primary Key Integrity** | ✅ No duplicates |
 | **Composite Key Integrity** | ✅ No duplicates |
-| **Value Ranges** | ✅ 99.99% valid (8 anomalies documented) |
+| **Value Ranges** | ✅ 99.99% valid (12 anomalies documented) |
 | **Date Logic** | ✅ Consistent (except 8 known Olist tracking gaps) |
 | **Overall Quality** | ✅ ACCEPTABLE FOR ANALYSIS |
 
@@ -83,6 +84,19 @@ Checked for date/status inconsistencies:
 - **Solution:** Documented as a known Olist system limitation
 - **Impact:** May slightly undercount on-time deliveries, but represents <0.008% of 99,441 orders
 
+### 5. shipping_limit_date Anomaly (4 records, 1 seller)
+- **Issue:** 4 `order_items` rows (across 3 orders) have `shipping_limit_date` values in 2020,
+  15+ months past the dataset's real order range (Sept 2016–Oct 2018). All 4 rows share the
+  same `seller_id`, pointing to a seller-specific data entry error rather than a random or
+  systemic issue.
+- **Discovered during:** Power BI date dimension setup — `CALENDARAUTO()` picked up this
+  outlier and inflated the date table's range to 2020, which is what surfaced the issue.
+- **Solution:** Retained in the source table as-is (not our data to correct). Worked around
+  at the reporting layer by using explicit `CALENDAR()` bounds (Sept 2016–Oct 2018) instead
+  of `CALENDARAUTO()` for the date dimension table.
+- **Impact:** None on analysis — this only affected auto-generated date range detection in
+  Power BI, not any SQL analysis or metric.
+
 ---
 
 ## What This Means For Our Analysis
@@ -90,6 +104,8 @@ Checked for date/status inconsistencies:
 - ✅ The data is reliable enough to analyze
 - ✅ These edge cases are too small to materially skew findings
 - ✅ We documented everything, so we can explain anomalies if they come up later
-- ⚠️ We know 8 orders have incomplete delivery data — we'll note this if it matters in logistics analysis
+- ⚠️ We know 8 orders have incomplete delivery data — noted in logistics analysis
+- ⚠️ We know 4 rows have a corrupted future-dated shipping_limit_date tied to one seller —
+  noted here and worked around in the Power BI date dimension
 
-**Conclusion:** Data quality is GOOD. We can proceed with confidence to business analysis.
+**Conclusion:** Data quality is GOOD. We can proceed with confidence to business analysis and dashboarding.
