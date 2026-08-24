@@ -27,7 +27,7 @@ tutorial-style walkthrough.
   peak monthly volume, returning customers stay a small fraction of that month's 
   activity.
 
-Full findings with methodology, thresholds, and reasoning: see [`findings/`](./findings).
+Full findings with methodology, thresholds, and reasoning: see (VALIDATION_FINDINGS.md).
 
 ## Analysis Completed
 | Phase | Status |
