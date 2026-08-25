@@ -1,8 +1,16 @@
 # Logistics & Delivery Analysis — Findings
 
 ## On-Time Delivery Rate
-- **Finding:** ~91.9% of delivered orders arrived on or before the estimated delivery
-  date.
+- **Finding:** 93.22% of delivered orders arrived on or before the estimated delivery
+  date (89,936 of 96,478 delivered orders). 6.77% were late (6,534), and 0.01% (8
+  orders) have an unknown delivery date (the known Olist tracking gap).
+- **Correction note:** An earlier version of this analysis reported ~91.9%, computed by
+  comparing raw timestamp columns without casting to date. Since
+  `order_estimated_delivery_date` is stored at midnight while
+  `order_delivered_customer_date` carries a real time-of-day, that version
+  misclassified some same-day deliveries as late. Caught while rebuilding this measure
+  in DAX for Power BI and cross-checking it against SQL — both now agree exactly at
+  93.22%, confirming the corrected figure.
 - **Finding:** For the late orders, average delay is ~8.9 days.
 
 ## Orders That Never Reached "Delivered"

@@ -5,8 +5,8 @@ with delivery_statuses as
 (SELECT
     case 
 		when o.order_delivered_customer_date is null then 'Delivery Date Unknown'
-		when (o.order_delivered_customer_date = o.order_estimated_delivery_date) 
-		or (o.order_delivered_customer_date < o.order_estimated_delivery_date) then 'Delivery on time or early'
+		when (o.order_delivered_customer_date::date = o.order_estimated_delivery_date::date) 
+		or (o.order_delivered_customer_date::date < o.order_estimated_delivery_date::date) then 'Delivery on time or early'
 		else 'Delivery Late'
 		end as  Delivery_status,
     COUNT(*) AS order_count
@@ -54,7 +54,7 @@ delivery_status AS (
     SELECT order_id,
         CASE 
 		WHEN o.order_delivered_customer_date is null then 'Delivery Date Unknown'
-		when (o.order_delivered_customer_date = o.order_estimated_delivery_date) 
+		when (o.order_delivered_customer_date::date = o.order_estimated_delivery_date::date) 
 		or (o.order_delivered_customer_date < o.order_estimated_delivery_date) then 'Delivery on time or early'
 		else 'Delivery Late'
 		END AS delivery_status
