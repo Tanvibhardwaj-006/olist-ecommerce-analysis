@@ -1,14 +1,14 @@
 --- PERFORMANCE ANALYSIS----
 
 -- Monthly revenue and order volume trend — is the business growing or flattening?
-SELECT DATE_TRUNC('month', o.order_purchase_timestamp) AS order_month,
+select DATE_TRUNC('month', o.order_purchase_timestamp) AS order_month,
     COUNT(DISTINCT o.order_id) AS total_orders,
     sum( p.payment_value) AS total_revenue,
     ROUND(SUM(p.payment_value) / COUNT(DISTINCT o.order_id), 2) AS avg_order_value
 FROM orders AS o
-left JOIN payments AS p ON o.order_id = p.order_id
-GROUP BY order_month
-ORDER BY order_month 
+left join payments AS p ON o.order_id = p.order_id
+group by  order_month
+order by  order_month 
 
 
 -- FINDING: Order volume and revenue grew steadily through 2017, then plateaued in 2018 
@@ -21,7 +21,7 @@ ORDER BY order_month
 --- REVENUE PER CATEGORY ----
 ----PARETO ANALYSIS----
 with category_revenue as (
-SELECT c.product_category_name_english, round(sum(oi.price):: numeric,2) as category_revenue
+select c.product_category_name_english, round(sum(oi.price):: numeric,2) as category_revenue
 FROM category as c JOIN  products as p on 
 c.product_category_name = p.product_category_name 
 JOIN  order_items as oi  on
@@ -31,7 +31,7 @@ group by c.product_category_name_english)
 
 -- Running revenue per category--
 running_revenue as (
-SELECT c.product_category_name_english, category_revenue, sum(category_revenue) over( order  by category_revenue desc)
+select c.product_category_name_english, category_revenue, sum(category_revenue) over( order  by category_revenue desc)
 as culmulative_revenue
 from category_revenue as c 
 )
@@ -77,16 +77,16 @@ but such  low propertion contributing to large amount of revenue the risk is wor
 --Order status breakdown — funnel leakage--
 -- orders except deliverd and their contribution to total revenue: canceled, invoiced,processed,created,approved
 with order_breakdown_count as (
-SELECT o.order_status,
+select o.order_status,
     COUNT(DISTINCT o.order_id) AS order_count,
     COALESCE(SUM(p.payment_value), 0) AS total_payment_value
 FROM orders AS o
-LEFT JOIN payments AS p ON o.order_id = p.order_id
-GROUP BY o.order_status
-ORDER BY order_count DESC)
+left join payments AS p ON o.order_id = p.order_id
+group by  o.order_status
+order by  order_count DESC)
 
 
-SELECT ob.order_status,
+select ob.order_status,
 		ob.order_count,
 		ob.total_payment_value,
 		round((ob.order_count::numeric/sum(ob.order_count) over())*100,2) as perc_order_count,

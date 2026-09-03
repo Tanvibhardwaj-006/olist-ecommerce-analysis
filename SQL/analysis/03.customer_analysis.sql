@@ -1,9 +1,9 @@
 -- total number of orders per customer
-SELECT c.customer_unique_id,COUNT(o.order_id) AS ORDER_COUNT 
-FROM orders  as o JOIN customers as c 
+select c.customer_unique_id,COUNT(o.order_id) AS ORDER_COUNT 
+from orders  as o join customers as c 
 ON o.customer_id = c.customer_id
-GROUP BY  c.customer_unique_id 
-ORDER BY ORDER_COUNT desc;
+group by   c.customer_unique_id 
+order by ORDER_COUNT desc;
 
 --- sum of total no. of orders 
 select sum(ORDER_COUNT) from 
@@ -97,10 +97,10 @@ Final_recency as(
  
 --- frequency : total number of orders per customer
 frequency as (
-	SELECT c.customer_unique_id,COUNT(o.order_id) AS order_count
-	FROM orders  as o JOIN customers as c 
-	ON o.customer_id = c.customer_id
-	GROUP BY  c.customer_unique_id ),
+	select c.customer_unique_id,COUNT(o.order_id) AS order_count
+	FROM orders  as o join customers as c 
+	on o.customer_id = c.customer_id
+	group by  c.customer_unique_id ),
 
 --- monetary value : total amount spent by each customer
 monetary_value as(

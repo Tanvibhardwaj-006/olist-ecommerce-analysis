@@ -46,7 +46,7 @@ WITH ranked_reviews AS (
    SELECT 
         order_id,
         review_score,
-        ROW_NUMBER() OVER (PARTITION BY order_id ORDER BY review_answer_timestamp desc) AS rn
+        ROW_NUMBER() OVER (partition by  order_id Order by  review_answer_timestamp desc) AS rn
     FROM order_reviews
 	
 ),
@@ -86,8 +86,8 @@ WITH ranked_reviews AS (
 ),
 delivery_status AS (
     SELECT order_id,
-        CASE 
-		WHEN o.order_delivered_customer_date is null then 'Delivery Date Unknown'
+        case 
+		when o.order_delivered_customer_date is null then 'Delivery Date Unknown'
 		when (o.order_delivered_customer_date = o.order_estimated_delivery_date) 
 		or (o.order_delivered_customer_date < o.order_estimated_delivery_date) then 'Delivery on time or early'
 		else 'Delivery Late'
@@ -99,8 +99,8 @@ SELECT
 	 ds.delivery_status,
 	rr. review_score,
     COUNT(*) AS total_orders
-FROM delivery_status AS ds
-JOIN ranked_reviews AS rr ON ds.order_id = rr.order_id
+from delivery_status AS ds
+join ranked_reviews AS rr ON ds.order_id = rr.order_id
  and rr.rn=1
 GROUP BY ds.delivery_status,rr.review_score
 order by ds.delivery_status,rr.review_score
@@ -119,7 +119,7 @@ and other factors (product quality, communication, refund handling) likely play 
 -- distinct in order_categories so multi-item-same-category orders don't get counted twice
 WITH delivery_status AS (
     SELECT order_id,
-        CASE 
+        case 
 		WHEN o.order_delivered_customer_date is null then 'Delivery Date Unknown'
 		when (o.order_delivered_customer_date = o.order_estimated_delivery_date) 
 		or (o.order_delivered_customer_date < o.order_estimated_delivery_date) then 'Delivery on time or early'
@@ -128,11 +128,11 @@ WITH delivery_status AS (
     FROM orders as o
     WHERE order_status = 'delivered'
 ),
-order_categories AS (
+order_categories as (
     SELECT DISTINCT oi.order_id, c.product_category_name_english
     FROM order_items AS oi
-    JOIN products AS p ON oi.product_id = p.product_id
-    JOIN category AS c ON p.product_category_name = c.product_category_name
+    JOIN products as p on oi.product_id = p.product_id
+    JOIN category as c on p.product_category_name = c.product_category_name
 )
 SELECT 
     oc.product_category_name_english,
@@ -140,12 +140,12 @@ SELECT
     SUM(CASE
 	WHEN ds.delivery_status = 'Delivery Late' THEN 1 
 	ELSE 0 END) AS late_orders,
-    ROUND(100.0 * SUM(CASE WHEN ds.delivery_status = 'Delivery Late' THEN 1 ELSE 0 END) / COUNT(*), 2) AS pct_late
-FROM delivery_status AS ds
-JOIN order_categories AS oc ON ds.order_id = oc.order_id
-GROUP BY oc.product_category_name_english
-HAVING COUNT(*) >= 100
-ORDER BY pct_late DESC
+    ROUND(100.0 * SUM(CASE WHEN ds.delivery_status = 'Delivery Late' then 1 else 0 end) / COUNT(*), 2) AS pct_late
+from delivery_status AS ds
+join order_categories AS oc ON ds.order_id = oc.order_id
+group by  oc.product_category_name_english
+having COUNT(*) >= 100
+order by  pct_late DESC
 ;
 /* output: audio 12.93%, fashion_underwear_beach 12.82%, books_technical 10.94% top the list
 no single category is a huge outlier - delay looks spread out, not one category's fault
