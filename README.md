@@ -32,11 +32,11 @@ Full findings with methodology, thresholds, and reasoning: see (VALIDATION_FINDI
 ## Analysis Completed
 | Phase | Status |
 |---|---|
-| Data Validation | ✅ Complete — see [VALIDATION_FINDINGS.md](./VALIDATION_FINDINGS.md) |
-| Customer Analysis | ✅ Complete — repeat purchase rate, geographic AOV, RFM segmentation, and new-vs-returning monthly trend |
-| Sales Performance | ✅ Complete |
-| Logistics & Delivery | ✅ Complete |  
-| Customer Satisfaction | ✅ Complete — review distribution, worst categories, RFM × delivery-lateness cross-analysis |
+| Data Validation |  Complete — see [VALIDATION_FINDINGS.md](./VALIDATION_FINDINGS.md) |
+| Customer Analysis |  Complete — repeat purchase rate, geographic AOV, RFM segmentation, and new-vs-returning monthly trend |
+| Sales Performance |  Complete |
+| Logistics & Delivery |  Complete |  
+| Customer Satisfaction | Complete — review distribution, worst categories, RFM × delivery-lateness cross-analysis |
 
 ## Not Started Yet
 - Date dimension table (for Power BI trend analysis)
